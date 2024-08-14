@@ -19,7 +19,7 @@ services:
   titan:
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: mavlinkuavpy/Dockerfile
       ssh:
         - default
     image: vehicle
