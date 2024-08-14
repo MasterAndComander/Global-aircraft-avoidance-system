@@ -1,4 +1,4 @@
-# mavlinkuav-py
+# Global-aircraft-avoidance-system
 
 [MAVLink](https://mavlink.io/en/) based UAV vehicles control using
 [DRONEKIT](https://dronekit-python.readthedocs.io/en/latest/) and the
