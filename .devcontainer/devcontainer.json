@@ -45,7 +45,7 @@
 	},
 
 	"runArgs": [
-		"--network=mavlinkuav-py_rabbitmq-net",
+		"--network=global-aircraft-avoidance-system_rabbitmq-net",
 		"--env-file",
 		".env"
 	],
