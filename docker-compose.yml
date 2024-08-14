@@ -1,0 +1,41 @@
+services:
+
+  rabbitmq:
+    image: rabbitmq:3.9.16-management-alpine
+    container_name: 'rabbitmq'
+    restart: 'always'
+    environment:
+      - HOSTNAME=rabbitmq
+      - RABBITMQ_NODENAME=node@rabbitmq
+    volumes:
+      - ./rabbitmq/conf/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - rabbitmq:/var/lib/rabbitmq/
+    ports:
+      - 5672:5672
+      - 15672:15672
+    networks:
+      - rabbitmq-net
+
+  titan:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      ssh:
+        - default
+    image: vehicle
+    env_file:
+      - .env
+    environment:
+      DEVICE_ID: titan
+      LAT: 45.50912853002438
+      LON: 11.281411417663465
+    restart: always
+    networks:
+      - rabbitmq-net
+
+networks:
+  rabbitmq-net:
+    driver: bridge
+
+volumes:
+  rabbitmq:
