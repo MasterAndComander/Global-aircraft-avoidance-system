@@ -1,0 +1,14 @@
+{
+    "name": "fleet_manager",
+    "version": "0.0.0",
+    "private": true,
+    "dependencies": {
+        "@turf/boolean-intersects": "^6.5.0",
+        "bluebird": "^3.5.4",
+        "dotenv": "^16.0.3",
+        "loggerlib": "../libraries/loggerlib/index",
+        "rabbit": "../libraries/rabbit-js/index",
+        "to-boolean": "^1.0.0",
+        "quadtree": "../libraries/quadtree-js/Quadtree"
+    }
+  }

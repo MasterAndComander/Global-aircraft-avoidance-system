@@ -1,0 +1,7 @@
+
+{
+    "name": "quadtree",
+    "version": "0.0.0",
+    "main": "Quadtree.js",
+    "dependencies": {}
+  }

@@ -1,0 +1,14 @@
+{
+    "name": "rabbit",
+    "version": "1.0.0",
+    "description": "RabbitMQ Library for JavaScript",
+    "main": "index.js",
+    "dependencies": {
+      "amqplib": "^0.9.0",
+      "dotenv": "^16.0.3",
+      "to-boolean": "^1.0.0"
+    },
+    "author": "Alberto Cobo",
+    "license": "ISC"
+  }
+  

@@ -16,6 +16,22 @@ services:
     networks:
       - rabbitmq-net
 
+  fleet-manager:
+      image: docker-fleet-manager:latest
+      build:
+        context: .
+        dockerfile: fleetmanager-js/Dockerfile
+        ssh:
+        - default
+      container_name: fleet-manager
+      env_file:
+      - .env
+      restart: always
+      volumes:
+        - ~/log/fleet-manager:/root/log
+      networks:
+      - rabbitmq-net
+
   titan:
     build:
       context: .

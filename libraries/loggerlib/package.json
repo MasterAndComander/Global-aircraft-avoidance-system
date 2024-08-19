@@ -1,0 +1,10 @@
+{
+    "name": "logger-js",
+    "version": "0.0.0",
+    "dependencies": {
+      "log4js": "^6.3.0"
+    },
+    "author": "Alberto Cobo",
+    "license": "ISC"
+  }
+  
