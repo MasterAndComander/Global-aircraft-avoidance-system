@@ -2,8 +2,8 @@
 
 require('dotenv').config();
 
-const loggerJs = require('loggerlib');
-const Rabbit = require('rabbit');
+const loggerJs = require('../libraries/loggerlib/index.js');
+const Rabbit = require('../libraries/rabbit-js/index.js');
 const ToBoolean = require('to-boolean');
 
 const logger = new loggerJs('log', 'FleetManager');

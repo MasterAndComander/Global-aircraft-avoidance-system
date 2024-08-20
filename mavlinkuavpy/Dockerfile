@@ -3,9 +3,9 @@ FROM python:3.6-slim
 RUN apt update && \
     apt install python3-pip -y
 
-COPY . /mavlinkuav-py
+COPY . /gaas
 
-WORKDIR /mavlinkuav-py/
+WORKDIR /gaas/
 
 RUN pip3 install --upgrade .
 

@@ -3,8 +3,8 @@ require('dotenv').config();
 const amqp  = require('amqplib');
 const EventEmitter = require('events');
 
-const loggerLibrary = require('../loggerlib/index');
-const IdGenerator = require('../uuid-generator/index');
+const loggerLibrary = require('../loggerlib/index.js');
+const IdGenerator = require('../uuid-generator/index.js');
 const Promise = require('bluebird');
 const ToBoolean = require('to-boolean');
 const emitter = new EventEmitter();

@@ -1,7 +1,7 @@
 'use strict';
 const Promise = require('bluebird');
 const trgIntersect = require('@turf/boolean-intersects');
-const Quadtree = require('quadtree');
+const Quadtree = require('../libraries/quadtree-js/Quadtree.js');
 
 const TIMEOUT = 3000;
 const MAX_LAT = 90;

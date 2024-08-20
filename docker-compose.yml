@@ -2,7 +2,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.9.16-management-alpine
-    container_name: 'rabbitmq'
+    container_name: 'gaas-rabbitmq'
     restart: 'always'
     environment:
       - HOSTNAME=rabbitmq
@@ -16,14 +16,14 @@ services:
     networks:
       - rabbitmq-net
 
-  fleet-manager:
-      image: docker-fleet-manager:latest
+  gaas-fleet-manager:
+      image: gaas-docker-fleet-manager:latest
       build:
         context: .
         dockerfile: fleetmanager-js/Dockerfile
         ssh:
         - default
-      container_name: fleet-manager
+      container_name: gaas-fleet-manager
       env_file:
       - .env
       restart: always
@@ -32,12 +32,13 @@ services:
       networks:
       - rabbitmq-net
 
-  titan:
+  gaas-titan:
     build:
       context: .
       dockerfile: mavlinkuavpy/Dockerfile
       ssh:
         - default
+    container_name: gaas-titan
     image: vehicle
     env_file:
       - .env
