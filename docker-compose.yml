@@ -50,6 +50,24 @@ services:
     networks:
       - rabbitmq-net
 
+  gaas-nostromo:
+    build:
+      context: .
+      dockerfile: mavlinkuavpy/Dockerfile
+      ssh:
+        - default
+    container_name: gaas-nostromo
+    image: vehicle
+    env_file:
+      - .env
+    environment:
+      DEVICE_ID: nostromo
+      LAT: 45.50812853002438
+      LON: 11.282411417663465
+    restart: always
+    networks:
+      - rabbitmq-net
+
 networks:
   rabbitmq-net:
     driver: bridge

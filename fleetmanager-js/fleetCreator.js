@@ -23,7 +23,7 @@ class FleetManager {
         const self = this;
         self.mySelf = process.env.FLEET_EXCHANGE;
         self.mDesigner = process.env.MISSION_EXCHANGE;
-        self.deviceAgent = process.env.DEVICEAGENT_EXCHANGE;
+        self.deviceList = process.env.DEVICEAGENT_LIST.split(' ');
         self.rabbit = opts.rabbit;
         //logger
         self.logger = opts.logger;
@@ -45,9 +45,9 @@ class FleetManager {
                 self.rabbit.init()
                 .then(ok => {
                     self.logger.log('success', "init::Rabbit::" + ok);
-                    self.rabbit.joinPublisher(self.deviceAgent, '*.telemetryAgent', self.dataReceivedAsync, {objeto: self})
+                    self.joinDeviceTelemetrys()
                     .then(ok => {
-                        self.logger.log('success', 'init::JoinMessage::'+ok);
+                        self.logger.log('success', 'init::joinDeviceTelemetrys::'+ok);
                         self.rabbit.listenMessageSynco(self.mySelf, 'messageSyncServer', self.syncDataReceived, {objeto: self})
                         .then(ok => {
                             self.logger.log('success', 'init::JoinSyncDataReceived::'+ok);
@@ -60,7 +60,7 @@ class FleetManager {
                         });
                     })
                     .catch(err => {
-                        self.logger.log('error', 'init::JoinMessage::'+(err.message || err));
+                        self.logger.log('error', 'init::joinDeviceTelemetrys::'+(err.message || err));
                         reject(err);
                     });
                 })
@@ -75,6 +75,33 @@ class FleetManager {
     }
 
     //PRIVATE FUNCTIONS
+    joinDeviceTelemetrys() {
+        const self = this;
+        return new Promise( (resolve, reject) => {
+             try {
+                self.asyncLoopMenor(0, self.deviceList.length, (loop) => {
+                    let device = self.deviceList[loop.iteration()];
+                    self.rabbit.joinPublisher(device, 'telemetry', self.dataReceivedAsync, {objeto: self})
+                    .then(ok => {
+                        loop.next();
+                    })
+                    .catch(err => {
+                        self.logger.log('error', 'init::joinDeviceTelemetrys::JoinMessage::'+device+'::'+(err.message || err));
+                        loop.break(err);
+                    });
+                }, (err) => {
+                    if(err)
+                        reject(err);
+                    else
+                        resolve(JSON.stringify(self.deviceList));
+                });
+             } catch (error) {
+                self.logger.log('error', 'joinDeviceTelemetrys::Catch::'+(e.message ? e.message : e));
+                reject({error: e.message || e});
+             }
+        });
+    }
+
     syncDataReceived(params) {
         const self = params.objeto;
         return new Promise( (resolve, reject) => {
@@ -146,34 +173,19 @@ class FleetManager {
         try {
             self.logger.log('success', 'dataReceivedAsync::'+JSON.stringify(params.msg));
             let data = params.msg;
-            if((typeof data.action === 'string') && (typeof data.args === 'object')) {
-                let timeout = 0;
-                if(data.args.timeout)
-                    timeout = data.args.timeout;
-                switch (data.action) {
-                    case 'ExtendedTelemetry':
-                        let body = data.args;
-                        if( (typeof body.device === 'string') && (typeof body.type === 'string') &&
-                            (typeof body.lastUpdate === 'number') &&
-                            (typeof body.telemetry.gps === 'object') &&
-                            (!isNaN(body.telemetry.gps.altitude)) &&
-                            (!isNaN(body.telemetry.gps.latitude)) &&
-                            (!isNaN(body.telemetry.gps.longitude))
-                        ) {
-                            self.updateTelemetry(body)
-                            .then(device => {
-                                if(!(device.onGround) && device.type == 'charlie' && device.priority > 1)
-                                    self.checkElementCollisions(device);
-                            });
-                        } else {
-                            self.logger.log('error', 'dataReceivedAsync::ExtendedTelemetry::ERR_BADPARAMS');
-                        }
-                        break;
-                    default:
-                        self.logger.log('error', 'dataReceivedAsync::ERR_WRONGCONTENTTYPE');
-                }
+            if( (typeof data.id === 'string') && (typeof data.mode === 'string') &&
+                (typeof data.gps === 'object') &&
+                (!isNaN(data.gps.altitude)) &&
+                (!isNaN(data.gps.latitude)) &&
+                (!isNaN(data.gps.longitude))
+            ) {
+                self.updateTelemetry(data)
+                .then(device => {
+                    if(!(device.onGround) && device.priority > 1)
+                        self.checkElementCollisions(device);
+                });
             } else {
-                self.logger.log('error', 'syncDataReceived::Catch::Message Inconsistency');
+                self.logger.log('error', 'dataReceivedAsync::ExtendedTelemetry::ERR_BADPARAMS');
             }
         } catch (e) {
             self.logger.log('error', 'dataReceivedAsync::Catch::'+(e.message ? e.message : e));
@@ -226,38 +238,36 @@ class FleetManager {
     updateTelemetry (data) {
         const self = this;
         return new Promise((resolve) => {
-        let item = self.arrayMap.find(elem => elem.device == data.device);
+        let item = self.arrayMap.find(elem => elem.device == data.id);
         if(item) {
             if(self.quadMap.has(item.nextPos))
                 self.quadMap.delete(item.nextPos);
-            item.currPos = self.convertLatLng2Points(data.telemetry.gps);
-            item.nextPos = self.calculateNextPosition(data.telemetry);
-            item.speed = data.telemetry.v.speed || 0;
+            item.currPos = self.convertLatLng2Points(data.gps);
+            item.nextPos = self.calculateNextPosition(data);
+            item.speed = data.v.speed || 0;
             item.radius = self.calculateRadiusBySpeed(item.speed);
-            item.bearing = self.calculateBearing(data.telemetry.v);
-            item.lastUpdate = data.lastUpdate;
+            item.bearing = self.calculateBearing(data.v);
+            item.lastUpdate = new Date().getTime();
             item.online = true;
             item.mode = data.mode;
-            item.gpsData = data.telemetry.gps;
-            item.priority = data.onEvasion ? 150 : (data.priority || 100);
-            item.maxSpeed = data.telemetry.maxSpeed ? data.telemetry.maxSpeed : 5,
-            item.onEvasion = data.onEvasion,
-            item.onGround = data.landed;
+            item.gpsData = data.gps;
+            item.priority = item.onEvasion ? 150 : (item.priority || 100);
+            item.onEvasion = item.onEvasion || false;
+            item.onGround = data.mode == "LANDED";
             self.quadMap.add(item.nextPos, item);
             resolve(item);
         } else {
             let pos = self.arrayMap.push({
-                device: data.device, type: data.type,
-                priority: data.onEvasion ? 150 : (data.priority || 100),
-                online: true, gpsData: data.telemetry.gps, mode: data.mode,
-                lastUpdate: data.lastUpdate, currPos: self.convertLatLng2Points(data.telemetry.gps),
+                device: data.id,
+                priority: 100,
+                online: true, gpsData: data.gps, mode: data.mode,
+                lastUpdate: new Date().getTime(), currPos: self.convertLatLng2Points(data.gps),
                 lastEvasion: {deviceId: null, timer: new Date().getTime()},
-                nextPos: self.calculateNextPosition(data.telemetry),
-                onGround: data.landed,
-                onEvasion: data.onEvasion, radius: self.calculateRadiusBySpeed(data.telemetry.v.speed || 0),
-                bearing: self.calculateBearing(data.telemetry.v),
-                maxSpeed: data.telemetry.maxSpeed ? data.telemetry.maxSpeed : 5,
-                speed: data.telemetry.v.speed || 0
+                nextPos: self.calculateNextPosition(data),
+                onGround: data.mode == "LANDED",
+                onEvasion: false, radius: self.calculateRadiusBySpeed(data.v.speed || 0),
+                bearing: self.calculateBearing(data.v),
+                speed: data.v.speed || 0
             });
             self.quadMap.add(self.arrayMap[pos-1].nextPos, self.arrayMap[pos-1]);
             resolve(self.arrayMap[pos-1]);
