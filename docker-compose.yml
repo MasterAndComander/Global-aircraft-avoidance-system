@@ -44,8 +44,8 @@ services:
       - .env
     environment:
       DEVICE_ID: titan
-      LAT: 45.50912853002438
-      LON: 11.281411417663465
+      LAT: 36.74700544809835
+      LON: -4.55431044306826
     restart: always
     networks:
       - rabbitmq-net
@@ -62,8 +62,8 @@ services:
       - .env
     environment:
       DEVICE_ID: nostromo
-      LAT: 45.50812853002438
-      LON: 11.282411417663465
+      LAT: 36.74742848121214
+      LON: -4.554061249715687
     restart: always
     networks:
       - rabbitmq-net
