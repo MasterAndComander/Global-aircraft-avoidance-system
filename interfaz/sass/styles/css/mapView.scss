@@ -1,0 +1,336 @@
+@import '../../leaflet/leaflet.css';
+@import './common';
+
+.font15 {
+  font-size: 15px;
+}
+
+.width28 {
+  width: 28rem;
+}
+
+.dirRtl {
+  direction: rtl;
+}
+
+.dirLtr {
+  direction: ltr;
+}
+
+.height25px {
+  height: 25px;
+}
+
+.btnJoy {
+  border-radius: 3px;
+  box-shadow: none;
+  border: 1px solid #ddd;
+  background-color: #f4f4f4;
+  color: #444;
+  display: block;
+  width: 100%;
+  padding: 6px 12px;
+  margin-bottom: 0;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.42857143;
+  text-align: center;
+  white-space: nowrap;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  background-image: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+
+.btnJoyPressed {
+  background-color: $greenEmeritus !important;
+  border: 1px solid $fontWhite !important;
+  color: #fefefe !important;
+}
+
+.paddingTop1 {
+  padding-top: 1%;
+}
+
+.paddingBottom1 {
+  padding-bottom: 1%;
+}
+
+.userConf {
+  top: 20px;
+  z-index: 1030;
+  position: absolute;
+  right: 30px;
+
+  .btnUser {
+    background-color: $greenDarkEmeritus;
+    padding: 8px 10px 8px 15px;
+    border-radius: 17px;
+    margin-left: 10px;
+  }
+}
+
+.btnUser {
+  background-color: $greenBaldo;
+  padding: 8px 0px 5px 5px;
+  border-radius: 3px;
+  margin-left: 10px;
+}
+
+.hourTime {
+  position: absolute;
+  z-index: 1000;
+  font-size: 20px;
+  margin-left: 10px;
+  display: contents;
+}
+
+#linkUserLog {
+  color: $fontWhite;
+}
+
+.left114 {
+  left: 53px !important;
+}
+
+.margin2270 {
+  margin: 2px 2px 7px 0px;
+}
+
+.blueBorder {
+  border: 1px solid $greenEmeritus;
+  border-radius: 3px;
+}
+
+.zIndex1071 {
+  z-index: 1071;
+}
+
+.widthAuto {
+  width: auto;
+}
+
+.userIcon {
+  background: url(../../images/users/userActions.svg) center center no-repeat;
+  background-size: 25px;
+  margin-bottom: 10px;
+  padding: 6px 38px 3px 0px;
+}
+
+.userLabel {
+  padding-top: 3px;
+  font-size: 14px;
+}
+
+.tooltipClass {
+  padding: 0;
+  background-color: transparent;
+  border: 0;
+  box-shadow: none;
+  color: $fontWhite;
+  font-size: small;
+}
+
+.bodyList {
+  border: 1px solid $greenDarkEmeritus;
+  font-weight: bold;
+  color: $fontWhite;
+  text-align: center;
+  position: absolute;
+  padding-top: .4%;
+  width: 28rem;
+  font-size: 1.2rem;
+  border-radius: 3px;
+  background: $greyBack;
+}
+
+.colorMP {
+  background: $greenlightInput;
+  border: 1px solid $greyBack;
+  font-size: small;
+  padding: 0.5rem;
+  color: $greyBack
+}
+
+#deviceList {
+  top: 125px;
+  height: auto;
+  max-height: 85vh;
+  z-index: 1029;
+  left: 14px;
+  padding-bottom: 50px;
+}
+
+#devBody {
+  pointer-events: auto;
+  margin-left: 5px;
+  max-height: 65.4vh;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+.changeHeightDevices {
+  max-height: 56.4vh !important;
+}
+
+#misBody {
+  pointer-events: auto;
+  margin-left: 5px;
+  max-height: 65.4vh;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+.marginTop3 {
+  margin-top: 3%;
+}
+
+.marginTop4 {
+  margin-top: 4%;
+}
+
+.checkContainer {
+  display: block;
+  position: relative;
+  padding-left: 35px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  font-size: 22px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.checkList {
+  left: 12px;
+  height: 24px;
+}
+
+.float-left {
+  float: left !important;
+}
+
+.posAbsolute {
+  position: absolute !important;
+}
+
+.heightTableDevices {
+  height: auto;
+  margin-bottom: 1px;
+}
+
+#missionList {
+  top: 125px;
+  height: auto;
+  max-height: 85vh;
+  z-index: 1029;
+  right: 14px;
+  padding-bottom: 50px;
+}
+
+.baldoMission {
+  width: 94%;
+  margin-left: 10px;
+  margin-top: 5px;
+}
+
+.nameMission {
+  font-size: 16px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+.dateCss {
+  text-align: left;
+  padding-left: 12%;
+}
+
+.paddingLeft6 {
+  padding-left: 6% !important;
+}
+
+.mtopmBot10 {
+  margin-top: 10px;
+  margin-bottom: 10px
+}
+
+.marginRight7px {
+  margin-right: 7px;
+}
+
+.padding0 {
+  padding: 0;
+}
+
+.marginBottom3 {
+  margin-bottom: 3%;
+}
+
+.height56 {
+  height: 56%;
+}
+
+.enlargeArea {
+  width: 50px;
+  height: 33px;
+}
+
+.right25px {
+  right: 25px;
+}
+
+.padding-1 {
+  padding-left: 1%;
+  padding-right: 1%;
+}
+
+.gpsSection {
+  width: 100%;
+  height: 18%;
+  margin-top: 5%;
+}
+
+.flightSection {
+  width: 100%;
+  height: 25%;
+  margin-top: 1%;
+}
+
+.baldosa {
+  /*background: #1a324c !important;*/
+  margin-top: 5px;
+  width: 100%;
+  font-size: 14px;
+  display: block;
+  min-height: 90px;
+}
+
+.borderWhite {
+  border: 1px solid rgba(255, 248, 238, 0.7) !important;
+}
+
+.opacity06 {
+  opacity: .35;
+}
+
+.videoBox {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+.embeddedVideo {
+  z-index: 2000;
+  border-radius: 3px;
+  position: absolute;
+  height: 14.05rem;
+  width: 25rem;
+  bottom: 2%;
+  left: 14px;
+  border: 1px solid $greenDarkEmeritus;
+  background: $greyBack;
+}

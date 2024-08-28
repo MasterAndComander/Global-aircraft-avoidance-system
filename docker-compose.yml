@@ -32,6 +32,24 @@ services:
       networks:
       - rabbitmq-net
 
+  gaas-ui:
+      image: gaas-docker-ui:latest
+      build:
+        context: .
+        dockerfile: interfaz/Dockerfile
+        ssh:
+        - default
+      container_name: gaas-ui
+      env_file:
+      - .env
+      restart: always
+      ports:
+        - 3000:3000
+      volumes:
+        - ~/log/interfaz:/root/log
+      networks:
+      - rabbitmq-net
+
   gaas-titan:
     build:
       context: .

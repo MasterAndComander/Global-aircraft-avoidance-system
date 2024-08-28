@@ -1,0 +1,48 @@
+doctype html
+html
+    head
+        block head
+            meta(charset='utf-8')
+            meta(http-equiv='X-UA-Compatible' content='IE=edge')
+            // Tell the browser to be responsive to screen width
+            meta(content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport')
+            link(rel='stylesheet' href='/boostrap/dist/css/bootstrap.min.css')
+            title= title
+            script.
+                if (typeof module === 'object') {window.module = module; module = undefined;}
+            script.
+                let page = "#{page}";
+
+            case page
+                when 'mapView'
+                    link(rel='stylesheet' href='styles/css/mapView.css')
+
+    body
+    block content
+
+    block foot
+        #footer
+            script.
+                if (window.module) module = window.module;
+            script(src='/socket.io/socket.io.js')
+            // jQuery 3.5.1
+            script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js')
+            script(src='/plugins/jquery-ui/jquery-ui.min.js')
+            // Bootstrap 5.2
+            script(src='/boostrap/dist/js/bootstrap.bundle.min.js')
+            script(src='js/common.js')
+            script(src='utils/bootstrap-notify.js')
+            case page
+                when 'mapView'
+                    script.
+                        let strMissions = `!{JSON.stringify(missions)}`;
+                        let strDevices = `!{JSON.stringify(devices)}`
+                    script(src='leaflet/leaflet.js')
+                    // Rotate marker on Leaflet
+                    script(src='leaflet/rotateMarker.js')
+                    script(src='js/devicesActions.js')
+                    script(src='js/missionActions.js')
+                    script(src='js/mapView.js')
+            script(src='/js/socket.js')
+            script.
+                if (window.module) module = window.module;

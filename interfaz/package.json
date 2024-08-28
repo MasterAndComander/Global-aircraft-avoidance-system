@@ -1,0 +1,32 @@
+{
+    "name": "gass-ui",
+    "version": "1.0.0",
+    "description": "Interfaz gráfica TFG",
+    "scripts": {
+        "start": "node ./bin/www",
+        "dev": "nodemon ./bin/www",
+        "gulp": "gulp build",
+        "gulpWatch": "gulp watch"
+    },
+    "dependencies": {
+        "bluebird": "^3.5.4",
+        "compression": "^1.7.4",
+        "cookie-parser": "^1.4.6",
+        "cors": "^2.8.5",
+        "dotenv": "^16.0.3",
+        "express": "^4.18.1",
+        "pug": "^3.0.2",
+        "sass": "^1.55.0",
+        "socket.io": "^4.5.2",
+        "to-boolean": "^1.0.0"
+    },
+    "devDependencies": {
+        "@fortawesome/fontawesome-free": "^6.1.1",
+        "gulp": "^4.0.2",
+        "gulp-autoprefixer": "^6.1.0",
+        "gulp-sass": "^5.1.0",
+        "gulp-uglifycss": "^1.1.0"
+    },
+    "author": "Alberto Cobo",
+    "license": "ISC"
+}

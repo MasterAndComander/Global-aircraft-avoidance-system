@@ -1,0 +1,69 @@
+@use './variables.scss' as *;
+// MIXINS
+
+@mixin verticalGradient {
+  background: rgb(134,195,56);
+  background: linear-gradient(196deg, rgba(134,195,56,1) 0%, rgba(133,199,45,1) 76%, rgba(62,62,62,1) 100%);
+  background: -moz-linear-gradient(196deg, rgba(134,195,56,1) 0%, rgba(133,199,45,1) 76%, rgba(62,62,62,1) 100%);
+  background: -webkit-linear-gradient(196deg, rgba(134,195,56,1) 0%, rgba(133,199,45,1) 76%, rgba(62,62,62,1) 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#86C338",endColorstr="#3e3e3e",GradientType=1);
+}
+
+@mixin circularGradient {
+  background: rgb(134,195,56);
+  background: radial-gradient(circle, rgba(134,195,56,1) 0%, rgba(133,199,45,1) 80%, rgba(62,62,62,1) 100%);
+  background: -moz-radial-gradient(circle, rgba(134,195,56,1) 0%, rgba(133,199,45,1) 80%, rgba(62,62,62,1) 100%);
+  background: -webkit-radial-gradient(circle, rgba(134,195,56,1) 0%, rgba(133,199,45,1) 80%, rgba(62,62,62,1) 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#86C338",endColorstr="#3e3e3e",GradientType=1);
+  height:100%;
+}
+
+@mixin horizontalGradient {
+  background: #3e3e3e;
+  // background: rgb(0,75,152);
+  // background: -moz-linear-gradient(97deg, rgba(0,75,152,1) 0%, rgba(27,62,146,1) 0%, rgba(11,15,29,1) 60%);
+  // background: -webkit-linear-gradient(97deg, rgba(0,75,152,1) 0%, rgba(27,62,146,1) 0%, rgba(11,15,29,1) 60%);
+  // background: linear-gradient(97deg, rgba(0,75,152,1) 0%, rgba(27,62,146,1) 0%, rgba(11,15,29,1) 60%);
+  // filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#004b98",endColorstr="#0b0f1d",GradientType=1);
+}
+
+@mixin flexColumnCenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@mixin flexColumnNormal {
+  display: flex;
+  flex-direction: column;
+  align-items: normal;
+}
+
+@mixin verticalCenter {
+  position: absolute;
+  top: 50%;
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+
+@mixin topCenter {
+  position: absolute;
+  top: 5%;
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+
+@mixin defBtn {
+  border-radius: 3px;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  border: 1px solid transparent;
+  background-color: $greenEmeritus !important;
+  color: $fontWhite !important;
+
+  &:hover {
+    background-color: $greenLightEmeritus;
+    color: #fff;
+    opacity: 0.8;
+  }
+}

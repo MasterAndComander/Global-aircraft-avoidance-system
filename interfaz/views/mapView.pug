@@ -1,0 +1,58 @@
+extends layout
+
+block append head
+block content
+    #maxContainer.wrapper 
+        #map.contentSection
+            div.width28.row.col-md-12.operationUser.userConf.btnUser.dropdown.linkUserLog.flex.width28.borderBlue
+                div.col-md-6
+                    #timeZone.hourTime
+                        h4#hora
+        // Botonera izquierda
+        div#optionsManagement.leftBotonera.zIndex1071.backgroundDevices.softBR
+            a#missionManager.btn.btn-block.azulSave.leftBut.dropdown.leftDropDown(menu="leftMenu" onclick="" )
+                  i.fa.fa-map.fa-lg.marginLeft-3
+                  div.backgroundDevices.context-menu-marker.padding15.visibilityInherit.zIndex1071.dropdown-content.missionDrop
+                    button.btn.btn2show.marginRight4.azulSave.displayGrid.marginTop7.width100(onclick="printMissions()" title="")
+                      i.fa.fa-download
+                      strong Misiones
+        // Termina botonera
+        #deviceList.bodyList
+            .col-md-12 
+                h3.marginBottom1.alingCenter Devices
+            #devBody
+                #tableDevices.heightTableDevices
+        #missionList.bodyList.noVisible
+            .col-md-12.row
+                .col-md-10
+                    h3.marginBottom1.alingCenter Missions
+                .col-md-2
+                    button.btn.azulSave.fa.fa-times(type="button" onclick="closeMissions()" title="Close missions")
+            #misBody
+                #tableMissions.heightTableDevices
+    
+    // Modal para configurar el GOTO
+    #GoToConfiguration.modal.fade(role='dialog')
+      .modal-dialog.modal-md
+        .modal-content.floatLeft
+          .modal-header
+            h4.modal-title Altitud
+            button.close(type='button' data-bs-dismiss='modal') &times;
+          .modal-body.alingCenter.col-md-12
+            .col-md-12.row
+              .col-sm-4.form-group
+                label(for='latitudeGoTo') Latitud:
+                input#latitudeGoTo.form-control.input-sm(type='number' value='' readonly)
+              .col-sm-4.form-group
+                label(for='longitudeGoTo') Longitud:
+                input#longitudeGoTo.form-control.input-sm(type='number' value='' readonly)
+              .col-sm-4.form-group
+                label(for='altitudeGoTo') Altitud:
+                input#altitudeGoTo.form-control(type='number' min='10' max='120')
+          .modal-footer.col-md-12.flex.justifyContent
+            .col-md-4.row-centered
+              button.btn.azulSave(type='button' data-bs-dismiss='modal' onclick="sendGoTo()") Aceptar
+            .col-md-4.row-centered
+              button.btn.azulSave(type='button' data-bs-dismiss='modal') Cancelar
+
+block append foot
