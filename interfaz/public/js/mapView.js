@@ -51,6 +51,9 @@ $(document).ready(function() {
           console.log(err);
       });
     }
+    if(strMissions) {
+      missions = JSON.parse(strMissions.replace(/&quot;/g, '\"'));
+    }
     map.addEventListener('contextmenu', parseGoTo);
     if(currentUser.admin == 1)
       createAdminButtons();

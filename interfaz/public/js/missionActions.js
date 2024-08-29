@@ -10,14 +10,13 @@ function classMission(mission, deviceId, onEdit) {
   this.paused = false;
   this.id = mission.id;
   this.name = mission.name;
-  this.description = mission.description;
+  this.description = mission.description || "";
   this.deviceId = deviceId;
   this.devicePausedId = [];
   this.missionType = mission.missionType;
   this.onEdit = onEdit;
-  this.missionPoints = mission.missionPoints;
+  this.missionPoints = mission.missionPoints || [];
   this.structPoints = mission.structPoints;
-  this.creatorId = mission.creatorId;
 }
 
 function clearMissionMarkers(mission) {
@@ -69,8 +68,7 @@ function insertOnTable(mission) {
 
 async function printMissions() {
   try {
-    let missions = await getMissions();
-    if (missions.length == 0) return $.notify({ message: 'There are not mission in database. Create one to start.' }, { type: 'warning' });
+    if (missions.length == 0) return $.notify({ message: 'There are not mission in the system.' }, { type: 'warning' });
 
     let baldoMiss = document.getElementById("tableMissions");
     while (baldoMiss.firstChild) {
@@ -83,6 +81,7 @@ async function printMissions() {
     $('#missionList').removeClass('noVisible');
   } catch (error) {
     console.log(error);
+    $.notify({ message: error.message || error }, { type: 'danger' });
   }
 }
 
@@ -114,18 +113,7 @@ function addBaldoMission(mission, i) {
   name.className = 'col-sm-8 nameMission findNameMission';
   name.innerHTML = `${mission.name} (${mission.missionType})`;
 
-  let creator = document.createElement('i');
-  creator.className = 'col-sm-4 capitalize nameMission creators';
-  creator.innerHTML = `(${mission.userName})`;
-
   firstRow.appendChild(name);
-  firstRow.appendChild(creator);
-
-  let divDate = document.createElement('h6');
-  divDate.className = 'col-sm-12 sortByDate mtopmBot10 dateCss pointer';
-  divDate.setAttribute('date', new Date(mission.dateCreation).getTime());
-  divDate.innerHTML = dateFormated(mission.dateCreation);
-  divDate.onclick = () => clickBaldoMission(mission.id);
 
   let divBut = document.createElement('div');
   divBut.className = 'col-sm-12 flex mtopmBot10 dateCss';
@@ -136,41 +124,14 @@ function addBaldoMission(mission, i) {
   play.title = 'Start mission';
   play.onclick = () => chargePlayDeviceList(mission);
 
-  let pause = document.createElement('button');
-  pause.className = 'btn azulSave marginRight7px fa fa-pause';
-  pause.id = 'pause' + mission.id;
-  pause.title = 'Pause mission';
-  pause.onclick = (event) => pauseMissionFromMission(mission.id, event);
-
-  let continueM = document.createElement('button');
-  continueM.className = 'btn azulSave marginRight7px fa fa-mail-forward';
-  continueM.id = 'continue' + mission.id;
-  continueM.title = 'Continue mission';
-  continueM.onclick = (event) => continueMissionFromMission(mission.id, event);
-
   let abort = document.createElement('button');
   abort.className = 'btn azulSave marginRight7px fa fa-times';
   abort.id = 'abort' + mission.id;
   abort.title = 'Abort mission';
   abort.onclick = () => abortMissionFromBaldo(mission.id);
 
-  let edit = document.createElement('button');
-  edit.className = 'btn azulSave marginRight7px fa fa-edit';
-  edit.title = 'Edit mission';
-  edit.onclick = () => editMission(mission.id, mission.userId == currentUser.id);
-
-  let remove = document.createElement('button');
-  remove.onclick = () => deleteMission(mission.id, mission.userId);
-  remove.title = 'Delete mission';
-  remove.className = 'btn azulSave fa fa-trash';
-
   divBut.appendChild(play);
-  divBut.appendChild(pause);
-  divBut.appendChild(continueM);
   divBut.appendChild(abort);
-  divBut.appendChild(edit);
-  divBut.appendChild(remove);
-  secondRow.appendChild(divDate);
   secondRow.appendChild(divBut);
 
   let boxHeader = document.createElement('div');
@@ -194,16 +155,6 @@ function addBaldoMission(mission, i) {
   card.appendChild(thirdRow);
   card.appendChild(forthRow);
   leftMenu.appendChild(card);
-}
-
-function getMissions(dateStart, dateEnd) {
-  return new Promise((resolve, reject) => {
-    ajaxPost('missions/search', { dateStart: dateStart, dateEnd: dateEnd })
-      .then(salida => {
-        resolve(salida.result.missions);
-      })
-      .catch(err => reject(err.message || err))
-  })
 }
 
 function clickBaldoMission(id) {
@@ -394,11 +345,9 @@ function chargePlayDeviceList(mission) {
     div.appendChild(p);
   } else {
     let data = {
-      missionId: mId, devices: mDevices,
-      initPoint: document.getElementById('initMp').value,
-      finalAction: document.getElementById('finalActSelect').value
+      missionId: mId, devices: mDevices
     };
-    ajaxPost('missions/play', data)
+    ajaxPost('play', data)
     .then(salida => {
       let play = salida.result;
       play.responses.forEach((response, i) => {
@@ -448,7 +397,9 @@ async function showThisMission(id, cb) {
   try {
     let mission = await getMissionById(id);
     if (mission) {
+      console.log(mission)
       let newM = addInMissionsArray(mission, [], false);
+      console.log(newM)
       if (newM.structPoints) {
         showMarker(newM.structPoints);
       }
@@ -470,22 +421,19 @@ function lineClosePolygon(type, lastPoint, firstPoint, sePinta) {
 
 function getMissionById(id) {
   return new Promise((resolve, reject) => {
-    ajaxGet('missions/getmissionbyid', 'missionId=' + id)
-      .then(salida => {
-        if (salida.result.error == "ERR_NOERROR") {
-          resolve(salida.result.mission);
-        } else {
-          reject(salida.result.error);
-        }
-      })
-      .catch(err => reject(err.message || err));
+    let laM = missions.find(elem => elem.id == id);
+    if(laM)
+      resolve(laM);
+    else
+      reject('Mission not available')
   })
 }
 
 function fitBoundsMission(structPoints) {
+  console.log(structPoints)
   let missionCoordinates = [];
   for (var i = 0; i < structPoints.length; i++) {
-    missionCoordinates.push([structPoints[i].gps.latitude, structPoints[i].gps.longitude])
+    missionCoordinates.push([structPoints[i].lat, structPoints[i].lon])
   }
   let bounds = new L.LatLngBounds(missionCoordinates);
   map.flyTo([bounds._northEast.lat, bounds._northEast.lng], map.getZoom());
@@ -505,40 +453,44 @@ function createMarker(mission) {
 }
 
 function showMarker(array) {
-  array.forEach(erMp => {
-    if (!map.hasLayer(erMp.marker)) {
-      erMp.marker.addTo(map);
-    }
-    if (!map.hasLayer(erMp.marker.options.labelContent)) {
-      erMp.marker.options.labelContent.addTo(map);
-    }
-    if (erMp.polyline) {
-      if (!map.hasLayer(erMp.polyline)) {
-        erMp.polyline.addTo(map);
+  if(Array.isArray(array)) {
+    array.forEach(erMp => {
+      if (!map.hasLayer(erMp.marker)) {
+        erMp.marker.addTo(map);
       }
-    }
-  })
+      if (!map.hasLayer(erMp.marker.options.labelContent)) {
+        erMp.marker.options.labelContent.addTo(map);
+      }
+      if (erMp.polyline) {
+        if (!map.hasLayer(erMp.polyline)) {
+          erMp.polyline.addTo(map);
+        }
+      }
+    })
+  }
 }
 
 function hideMarker(array) {
-  array.forEach(elem => {
-    if (elem.marker) {
-      map.removeLayer(elem.marker.options.labelContent);
-      map.removeLayer(elem.marker);
-    }
-    if (elem.polyline) {
-      map.removeLayer(elem.polyline)
-    }
-  })
+  if(Array.isArray(array)) {
+    array.forEach(elem => {
+      if (elem.marker) {
+        map.removeLayer(elem.marker.options.labelContent);
+        map.removeLayer(elem.marker);
+      }
+      if (elem.polyline) {
+        map.removeLayer(elem.polyline)
+      }
+    })
+  }
 }
 
 function createPoint(structP, pos, icono) {
   let erName = 'Waypoint ' + pos;
-  let markerTmp = L.marker([structP.gps.latitude, structP.gps.longitude], {
+  let markerTmp = L.marker([structP.lat, structP.lon], {
     icon: icono,
     labelContent: L.tooltip({ direction: 'bottom', permanent: true, className: 'tooltipClass', offset: [0, 20], arrowClass: '' })
       .setContent(erName)
-      .setLatLng([structP.gps.latitude, structP.gps.longitude])
+      .setLatLng([structP.lat, structP.lon])
   });
   structP.name = erName;
   structP.marker = markerTmp;
@@ -551,7 +503,7 @@ function createPoint(structP, pos, icono) {
 //****************************************************************************//
 function pintaRuta(markerAnt, markerAct, sePinta) {
   if (markerAnt && markerAct) {
-    let path = [markerAnt.gps, markerAct.gps];
+    let path = [{'latitude': markerAnt.lat, 'longitude': markerAnt.lon}, {'latitude': markerAct.lat, 'longitude': markerAct.lon}];
     markerAct.polyline = drawRoute(path, sePinta);
   }
 }
@@ -624,101 +576,3 @@ function overMpLoad(div) {
   div.addEventListener('mouseover', () => overMpLoad(div));
 }
 
-function openNewMission() {
-  if (mapPopUpWindows.has('newMissionWindow')) return mapPopUpWindows.get('newMissionWindow').focus();
-  setTimeout(() => {
-    let missionManager = window.open('', 'CreateMission', "width=" + screen.width + ",height=" + screen.height + ",modal=yes,toolbar=no,menubar=no,resizable=no");
-    let form = document.createElement("form");
-    let opBoundingBox = document.createElement('input');
-    let zoomLatLng = document.createElement('input');
-    let parentUrl = document.createElement('input');
-
-    form.method = "POST";
-    form.action = `missionManager`;
-    form.target = 'CreateMission';
-    form.className = 'noVisible';
-
-    opBoundingBox.value = JSON.stringify(map.getBounds());
-    opBoundingBox.name = "bBox";
-    form.appendChild(opBoundingBox);
-
-    zoomLatLng.value = JSON.stringify({ zoom: map.getZoom(), latLng: map.getCenter() });
-    zoomLatLng.name = "zoomLatLng";
-    form.appendChild(zoomLatLng);
-
-    parentUrl.name = 'parentUrl';
-    parentUrl.value = window.location.href;
-    form.appendChild(parentUrl);
-
-    mapPopUpWindows.set('newMissionWindow', missionManager);
-    document.body.appendChild(form);
-    form.submit();
-    form.remove();
-  }, 200);
-}
-
-function editMission(elId, owner) {
-  if (mapPopUpWindows.has('editMissionWindow')) return mapPopUpWindows.get('editMissionWindow').focus();
-  setTimeout(() => {
-    let editMission = window.open('', 'Edit mission', "width=" + screen.width + ",height=" + screen.height + ",modal=yes,toolbar=no,menubar=no,resizable=no");
-    let form = document.createElement("form");
-    let missionId = document.createElement('input');
-    let propietario = document.createElement('input');
-    let opBoundingBox = document.createElement('input');
-    let parentUrl = document.createElement('input');
-
-    form.method = "POST";
-    form.action = `missionManager`;
-    form.target = 'Edit mission';
-    form.className = 'noVisible';
-
-    missionId.value = elId;
-    missionId.name = 'missionId';
-    form.appendChild(missionId);
-
-    propietario.value = owner;
-    propietario.name = 'propietario';
-    form.appendChild(propietario);
-
-    opBoundingBox.value = JSON.stringify(map.getBounds());
-    opBoundingBox.name = "bBox";
-    form.appendChild(opBoundingBox);
-
-    parentUrl.name = 'parentUrl';
-    parentUrl.value = window.location.href;
-    form.appendChild(parentUrl);
-
-    mapPopUpWindows.set('editMissionWindow', editMission);
-    document.body.appendChild(form);
-    form.submit();
-    form.remove();
-  }, 200);
-}
-
-function deleteMission(id, creator) {
-  deleteMissionFromDatabase(id, creator)
-    .then(message => {
-      deleteInMissionsArray(id);
-      printMissions(() => { });
-      showNotify(message, 'success')
-    })
-    .catch(err => showNotify(err.message || err, 'danger'));
-}
-
-function deleteMissionFromDatabase(id, creator) {
-  return new Promise((resolve, reject) => {
-    if (creator == currentUser.id) {
-      ajaxPost('missions/delete', { missionId: id })
-        .then(salida => {
-          if (salida.result && salida.result.error == 'ERR_NOERROR') {
-            resolve('Mission delete from database')
-          } else {
-            reject(alida.result.error)
-          }
-        })
-        .catch(err => reject(err));
-    } else {
-      reject('You are not the creator of the mission')
-    }
-  })
-}

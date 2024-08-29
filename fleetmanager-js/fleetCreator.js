@@ -119,33 +119,16 @@ class FleetManager {
                                 if(
                                     (data.args.mission && (typeof data.args.mission === 'object')) &&
                                     (data.args.finalAction && (typeof data.args.finalAction === 'string')) &&
-                                    (data.args.user && (typeof data.args.user === 'string')) &&
                                     (!isNaN(parseInt(data.args.numLaps))) && (!isNaN(parseInt(data.args.initMp))) &&
                                     (data.args.devicesId && (Array.isArray(data.args.devicesId)))
                                 ) {
-                                    self.createExecProcess(data.args.mission, data.args.devicesId, data.args.user, data.args.finalAction, data.args.numLaps, data.args.initMp)
+                                    self.createExecProcess(data.args.mission, data.args.devicesId, data.args.numLaps)
                                     .then(struct => {
                                         resolve({error: 'ERR_NOERROR', responses: struct});
                                     })
                                     .catch(err => reject({error: err.message || err}));
                                 } else {
                                     self.logger.log('error', 'syncDataReceived::GenerateExecutionProcess::ERR_BADPARAMS');
-                                    resolve({error: 'ERR_BADPARAMS'});
-                                }
-                                break;
-                            case 'GetBestMatches':
-                                if(
-                                    (data.args.mission && (typeof data.args.mission === 'object')) &&
-                                    (data.args.dist && (Array.isArray(data.args.dist))) &&
-                                    (data.args.devicesId && (Array.isArray(data.args.devicesId)))
-                                ) {
-                                    self.matchesDevicesWithMissions(data.args.mission, data.args.dist, data.args.devicesId)
-                                    .then(struct => {
-                                        resolve({error: 'ERR_NOERROR', struct: struct});
-                                    })
-                                    .catch(err => reject({error: err.message || err}));
-                                } else {
-                                    self.logger.log('error', 'syncDataReceived::GetBestMatches::ERR_BADPARAMS');
                                     resolve({error: 'ERR_BADPARAMS'});
                                 }
                                 break;
@@ -633,83 +616,42 @@ class FleetManager {
         return EARTH_R * c; // Distance in m
     }
 
-    createExecProcess(mission, devicesId, user, finalAction, numLaps, initMp) {
+    createExecProcess(mission, devicesId, numLaps) {
         const self = this;
         return new Promise( (resolve, reject) => {
           try {
             let arrayResponses = [];
-            let packet = self.createServerPacket(self.mDesigner, self.mySelf, 'ParseMission', {mission: mission, user: user});
-            self.sendSyncMessage(self.mDesigner, 'messageSyncServer', packet, 3000)
-            .then(newMps => {
-              if(newMps.error == 'ERR_NOERROR') {
-                let msgBody = {arrayPoints: newMps.missions, devicesNumber: devicesId.length, initMp: initMp}
-                let packet = self.createServerPacket(self.mDesigner, self.mySelf, 'MissionDivided', msgBody);
-                self.sendSyncMessage(self.mDesigner, 'messageSyncServer', packet, 3000)
-                .then(resultDivided => {
-                  if(resultDivided.error == 'ERR_NOERROR') {
-                    mission.missionPoints = resultDivided.mps;
-                    self.matchesDevicesWithMissions(mission, resultDivided.arrayPoints, devicesId)
-                    .then(matches => {
-                        self.translateMps(resultDivided.mps)
-                        .then(missionPoints => {
-                            self.asyncLoopMenor(0, matches.length, (loop) => {
-                                let i = loop.iteration();
-                                let approachAltitude;
-                                if(matches[i].changeHeight)
-                                approachAltitude = 10 + i*5;
-                                else
-                                approachAltitude = 0;
-                                let msgBody = {
-                                    message: 'MissionStart',
-                                    mission_id: mission.id,
-                                    mission: missionPoints,
-                                    user: user,
-                                    final_action: finalAction,
-                                    num_laps: parseInt(numLaps),
-                                    init_waypoint: parseInt(matches[i].missionPos.init),
-                                    current_waypoint: 0,
-                                    end_waypoint: parseInt(matches[i].missionPos.end),
-                                    approach_altitude: approachAltitude
-                                };
-                                let packet = self.createServerPacket(matches[i].deviceId, self.mySelf, 'Device', msgBody);
-                                self.sendSyncMessage(matches[i].deviceId, 'messageSyncServer', packet, 3000)
-                                .then(resStart => {
-                                    arrayResponses.push({droneId: matches[i].deviceId, error: resStart});
-                                    loop.next();
-                                })
-                                .catch(err => {
-                                    arrayResponses.push({droneId: matches[i].deviceId, error: err.message || err});
-                                    loop.next();
-                                });
-                            }, (err) => {
-                                resolve(arrayResponses);
-                            });
-                        })
-                        .catch(err => {
-                            self.logger.log('error', 'createExecProcess::translateMps::'+JSON.stringify(err.message || err));
-                            reject(err);
-                        });
+            self.translateMps(mission.structPoints)
+            .then(missionPoints => {
+                self.asyncLoopMenor(0, devicesId.length, (loop) => {
+                    let i = loop.iteration();
+                    let msgBody = {
+                        message: 'automatic-mission',
+                        mission_id: mission.id,
+                        mission: missionPoints,
+                        num_laps: parseInt(numLaps),
+                        init_waypoint: 1,
+                        current_waypoint: 0,
+                        final_waypoint: missionPoints.length,
+                        approach_altitude: 0
+                    };
+                    let packet = self.createServerPacket(devicesId[i], self.mySelf, 'Device', msgBody);
+                    self.sendRemoteRabbit(packet, 'command')
+                    .then(resStart => {
+                        arrayResponses.push({droneId: devicesId[i], error: 'ERR_NOERROR'});
+                        loop.next();
                     })
                     .catch(err => {
-                        self.logger.log('error', 'createExecProcess::matchesDevicesWithMissions::'+JSON.stringify(err.message || err));
-                        reject(err);
+                        arrayResponses.push({droneId: devicesId[i], error: err.message || err});
+                        loop.next();
                     });
-                  } else {
-                    self.logger.log('error', 'createExecProcess::MissionDivided::'+resultDivided.error);
-                    reject(resultDivided.error);
-                  }
-                })
-                .catch(err => {
-                  self.logger.log('error', 'createExecProcess::ParseMission::'+JSON.stringify(err.message || err));
-                  reject(err);
+                }, (err) => {
+                    resolve(arrayResponses);
                 });
-              } else {
-                reject(newMps.error);
-              }
             })
             .catch(err => {
-              self.logger.log('error', 'createExecProcess::ParseMission::'+JSON.stringify(err.message || err));
-              reject(err);
+                self.logger.log('error', 'createExecProcess::translateMps::'+JSON.stringify(err.message || err));
+                reject(err);
             });
           } catch (e) {
             reject(e.message);
@@ -726,14 +668,13 @@ class FleetManager {
                     let elem = points[loop.iteration()];
                     let mp = {
                         type: "waypoint",
-                        latitude: elem.gps.latitude,
-                        longitude: elem.gps.longitude,
-                        altitude: elem.gps.altitude,
-                        speed: self.parseSpeed(elem.commands),
-                        heading: elem.params.heading || null
+                        latitude: elem.lat,
+                        longitude: elem.lon,
+                        altitude: elem.alt,
+                        speed: 7,
+                        heading: null
                     };
                     missionPoints.push(mp);
-                    self.parseCommands(elem, missionPoints);
                     loop.next();
                 }, err => {
                     if(err)
@@ -746,169 +687,6 @@ class FleetManager {
             }
         });
     }
-
-    parseCommands(missionPoint, array) {
-        const self = this;
-        missionPoint.commands.forEach(command => {
-            switch (command.command) {
-                case "TURN":
-                    if(!missionPoint.params.keepYaw) {
-                        //Aun no se ha hecho nada
-
-                    }
-                    break;
-                case "SHOT":
-                    let cmd = {
-                        "target": "webcam-cpp",
-                        "action": "image-shot",
-                        "args": {
-                          "cmd_id": "abcde",
-                          "device": "/dev/camera",
-                          "height": 720,
-                          "width": 1280
-                        }                 
-                    };
-                    array.push(cmd)
-                    break;
-                case "REC":
-                    //Aun no se ha hecho nada
-                    break;
-                case "GIMBAL":
-                    //Aun no se ha hecho nada
-                    break;
-                case "WAIT":
-                    //Aun no se ha hecho nada
-                    break;
-                case "SPEED":
-                    // No hacemos nada, ya lo hemos tratado
-                    break;
-            
-                default:
-                    break;
-            }
-        });
-    }
-
-    parseHeading(missionPoint) {
-        const self = this;
-        if(missionPoint.params.keepYaw) {
-            let turn = missionPoint.commands.find(elem => elem.command == "TURN");
-            if(turn) {
-                return turn.args.angle;
-            } else {
-                return null;
-            }
-        } else {
-            return null;
-        }
-    }
-
-    parseSpeed(commands) {
-        const self = this;
-        let speed = commands.find(elem => elem.command == "SPEED");
-        if(speed) {
-            return speed.args.mps || MP_SPEED;
-        } else {
-            return MP_SPEED;
-        }
-    }
-
-    matchesDevicesWithMissions(mission, missionDist, devicesId) {
-        const self = this;
-        return new Promise( (resolve, reject) => {
-          try {
-            if( missionDist.length == devicesId.length ) {
-              self.getDevicesInList(devicesId)
-              .then(deviceData => {
-                if(missionDist.length == deviceData.length) {
-                  let structDistances = [];
-                  self.asyncLoopMenor(0, deviceData.length, function(loop) {
-                    let i = loop.iteration();
-                    structDistances.push({device: deviceData[i].device, distances: [], average: 0});
-                    self.asyncLoopMenor(0, missionDist.length, function(loop2) {
-                      let j = loop2.iteration();
-                      let point = mission.missionPoints[missionDist[j].init];
-                      let dst = self.getDistanceFromLatLon(point.gps.latitude, point.gps.longitude, deviceData[i].gpsData.latitude, deviceData[i].gpsData.longitude);
-                      structDistances[i].distances.push({elem: missionDist[j], distance: dst});
-                      structDistances[i].average += dst;
-                      loop2.next();
-                    }, function(brk) {
-                      structDistances[i].average = structDistances[i].average/structDistances[i].distances.length;
-                      structDistances[i].distances.sort(function(a, b) {return a.distance - b.distance});
-                      loop.next();
-                    });
-                  }, function(err) {
-                    structDistances.sort(function(a, b) {return b.average - a.average});
-                    let backStruct = []; let missionsAssigned = [];
-                    self.asyncLoopMenor(0, structDistances.length, function(loop3) {
-                      let m = loop3.iteration();
-                      let filtrados = structDistances[m].distances.filter(function(elem) {return missionsAssigned.indexOf(elem.elem.id) == -1});
-                      backStruct.push({deviceId: structDistances[m].device, missionPos: filtrados[0].elem, changeHeight: false});
-                      missionsAssigned.push(filtrados[0].elem.id);
-                      loop3.next();
-                    }, function(err) {
-                      self.asyncLoopMenor(0, backStruct.length-1, function(loop4) {
-                        let n = loop4.iteration();
-                        let fMi1 = missionDist.filter(function(elem) {return elem.id == backStruct[n].missionPos.id});
-                        let fDev1 = deviceData.filter(function(elem) {return elem.device == backStruct[n].deviceId});
-                        let fMi2 = missionDist.filter(function(elem) {return elem.id == backStruct[n+1].missionPos.id});
-                        let fDev2 = deviceData.filter(function(elem) {return elem.device == backStruct[n+1].deviceId});
-                        let mPoint1 = {latitude: mission.missionPoints[fMi1[0].init].gps.latitude, longitude: mission.missionPoints[fMi1[0].init].gps.longitude, altitude: 0};
-                        let mPoint2 = {latitude: mission.missionPoints[fMi2[0].init].gps.latitude, longitude: mission.missionPoints[fMi2[0].init].gps.longitude, altitude: 0};
-                        let mDev1 = {latitude: fDev1[0].gpsData.latitude, longitude: fDev1[0].gpsData.longitude, altitude: 0};
-                        let mDev2 = {latitude: fDev2[0].gpsData.latitude, longitude: fDev2[0].gpsData.longitude, altitude: 0};
-                        if(self.intersectionBetweenPoints(mDev1, mPoint1, mDev2, mPoint2)) {
-                          backStruct[n].changeHeight = true;
-                          loop4.next();
-                        } else {
-                          loop4.next();
-                        }
-                      }, function(err) {
-                        resolve(backStruct);
-                      });
-                    });
-                  });
-                } else
-                  reject('ERR_DEVICES_INCONSISTENCE');
-              })
-              .catch(err => {
-                reject(err);
-              });
-            } else
-              reject('ERR_ARRAY_LENGTH_NOT_MATCH');
-          } catch (e) {
-            reject(e.message);
-          }
-        });
-    }
-    
-    intersectionBetweenPoints(p1x, p1y, p2x, p2y) {
-        let firstLine = {
-            "type": "Feature",
-            "properties": {},
-            "geometry": {
-                "type": "LineString",
-                "coordinates": [
-                    [p1x.longitude, p1x.latitude],
-                    [p1y.longitude, p1y.latitude]
-                ]
-            }
-        };
-        let secondLine = {
-            "type": "Feature",
-            "properties": {},
-            "geometry": {
-                "type": "LineString",
-                "coordinates": [
-                    [p2x.longitude, p2x.latitude],
-                    [p2y.longitude, p2y.latitude]
-                ]
-            }
-        };
-    
-        return trgIntersect.default(firstLine, secondLine);
-    }
-    
 
     /******************************************************************************/
     /* LOOPS ASINCRONOS                                                           */
@@ -956,15 +734,31 @@ class FleetManager {
     
     //Crea un mensaje tipo que se queda en el server
     createServerPacket (target, source, action, body) {
+        if(!body["cmd_id"])
+            body["cmd_id"] = action+'_'+self.idGen.generate();
         let packet = {
             'target': target,
             'id': source,
-            'messageId': action+'_'+new Date().getTime(),
             'action': action,
             'args': body
         };
         return packet;
     }
+
+    //Envía el mensaje al broker de Rabbit
+    sendRemoteRabbit(data, cola) {
+        const self = this;
+        return new Promise( (resolve, reject) => {
+            if(typeof cola === 'string') {
+                self.rabbit.publishMessage(data.target, cola, data)
+                .then(ok => resolve(true))
+                .catch(err => reject(err));
+            } else {
+                reject('ERR_BAD_TYPE_QUEUE');
+            }
+        });
+    }
+
 
     //Envía mensaje síncrono
     sendSyncMessage(target, routingKey, message, elapsedTime) {
