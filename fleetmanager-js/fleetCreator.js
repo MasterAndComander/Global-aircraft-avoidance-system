@@ -636,6 +636,7 @@ class FleetManager {
                         approach_altitude: 0
                     };
                     let packet = self.createServerPacket(devicesId[i], self.mySelf, 'Device', msgBody);
+                    console.log(JSON.stringify(packet))
                     self.sendRemoteRabbit(packet, 'command')
                     .then(resStart => {
                         arrayResponses.push({droneId: devicesId[i], error: 'ERR_NOERROR'});
@@ -735,7 +736,7 @@ class FleetManager {
     //Crea un mensaje tipo que se queda en el server
     createServerPacket (target, source, action, body) {
         if(!body["cmd_id"])
-            body["cmd_id"] = action+'_'+self.idGen.generate();
+            body["cmd_id"] = action+'_'+(new Date().getTime());
         let packet = {
             'target': target,
             'id': source,
