@@ -353,10 +353,10 @@ function chargePlayDeviceList(mission) {
       play.responses.forEach((response, i) => {
         let device = devices.find(elem => elem.id == response.droneId);
         if(device) {
-          if (response.error.error == "ERR_NOERROR") {
+          if (response.error == "ERR_NOERROR") {
             $.notify({ message: `${device.name} has init ${mission.name}` }, { type: 'success' });
           } else {
-            $.notify({ message: `${device.name} has't been able to init ${mission.name}` }, { type: 'warning' });
+            $.notify({ message: `${device.name} has't been able to init ${mission.name} - ${response.error}` }, { type: 'warning' });
           }
         }
       });

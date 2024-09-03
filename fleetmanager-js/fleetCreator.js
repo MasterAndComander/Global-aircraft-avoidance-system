@@ -632,10 +632,12 @@ class FleetManager {
                         num_laps: parseInt(numLaps),
                         init_waypoint: 1,
                         current_waypoint: 0,
-                        final_waypoint: missionPoints.length,
+                        user: 'ALBERTO',
+                        final_action: 'RTL',
+                        end_waypoint: missionPoints.length,
                         approach_altitude: 0
                     };
-                    let packet = self.createServerPacket(devicesId[i], self.mySelf, 'Device', msgBody);
+                    let packet = self.createServerPacket(devicesId[i], self.mySelf, 'automatic-mission', msgBody);
                     console.log(JSON.stringify(packet))
                     self.sendRemoteRabbit(packet, 'command')
                     .then(resStart => {
