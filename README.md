@@ -8,14 +8,14 @@ Drone fleet management to avoid collisions during combined actions between two o
 [latest API](https://dronekit-python.readthedocs.io/en/latest/automodule.html#).
 
 ### Core control
-[NodeJs] (https://nodejs.org/) is used for drone fleet control
+[NodeJs](https://nodejs.org/) is used for drone fleet control
 
 ### Communications
-[RabbitMQ] (https://www.rabbitmq.com/) is used for communications between modules
+[RabbitMQ](https://www.rabbitmq.com/) is used for communications between modules
 Web insterface is deployed at [localhost:15672](localhost:15672)
 
 ### Local interface
-In order to visualize and obtain results, a web interface has been implemented with [expressjs] (https://expressjs.com/)
+In order to visualize and obtain results, a web interface has been implemented with [expressJS](https://expressjs.com/)
 
 ## deploy
 
