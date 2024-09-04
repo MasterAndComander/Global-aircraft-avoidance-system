@@ -225,15 +225,15 @@ class Vehicle:
         # if landed, takeoff
         if self.check_takeoff_needed():
             self.arm_and_takeoff(
-                target_location['alt']
+                target_location['altitude']
             )
 
         self.vehicle.wait_for_mode('GUIDED')
 
         target = LocationGlobalRelative(
-            target_location['lat'],
-            target_location['lon'],
-            target_location['alt']
+            target_location['latitude'],
+            target_location['longitude'],
+            target_location['altitude']
         )
         self.vehicle.simple_goto(target)
 
@@ -265,7 +265,7 @@ class Vehicle:
             # if landed, takeoff
             if self.check_takeoff_needed():
                 self.arm_and_takeoff(
-                    mission['args']['mission'][0]['alt']
+                    mission['args']['mission'][0]['altitude']
                 )
 
             Thread(
@@ -312,9 +312,9 @@ class Vehicle:
                 print('  Perform waypoint')
 
                 target_location = LocationGlobalRelative(
-                    mission_array[mission_item]['lat'],
-                    mission_array[mission_item]['lon'],
-                    mission_array[mission_item]['alt']
+                    mission_array[mission_item]['latitude'],
+                    mission_array[mission_item]['longitude'],
+                    mission_array[mission_item]['altitude']
                 )
                 self.vehicle.simple_goto(target_location)
 
@@ -419,7 +419,7 @@ def message_callback(ch, method, properties, body):
                 vehicle.do_goto(command['args'])
             elif command['action'] == 'stop':
                 vehicle.do_stop()
-            elif command['action'] == 'automaticmission':
+            elif command['action'] == 'automatic-mission':
                 vehicle.do_automatic_mission(command)
             elif command['action'] == 'land':
                 vehicle.do_land()
@@ -451,7 +451,7 @@ if __name__ == '__main__':
     subscriber = Listener(
         custom_callback=message_callback,
         exchange=configuration.DEVICE_ID,
-        routing_key='message'
+        routing_key='command'
     )
 
     # Get a vehicle

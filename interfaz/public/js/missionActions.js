@@ -397,9 +397,7 @@ async function showThisMission(id, cb) {
   try {
     let mission = await getMissionById(id);
     if (mission) {
-      console.log(mission)
       let newM = addInMissionsArray(mission, [], false);
-      console.log(newM)
       if (newM.structPoints) {
         showMarker(newM.structPoints);
       }
@@ -430,7 +428,6 @@ function getMissionById(id) {
 }
 
 function fitBoundsMission(structPoints) {
-  console.log(structPoints)
   let missionCoordinates = [];
   for (var i = 0; i < structPoints.length; i++) {
     missionCoordinates.push([structPoints[i].lat, structPoints[i].lon])

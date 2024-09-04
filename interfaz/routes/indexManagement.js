@@ -12,7 +12,7 @@ module.exports = function (Manager) {
       let page = 'mapView';
       res.render(page, {
         page: page, missions: missions, devices: process.env.DEVICEAGENT_LIST.split(' '),
-        title: 'GASS'
+        title: 'GAAS'
       });
     });
 
