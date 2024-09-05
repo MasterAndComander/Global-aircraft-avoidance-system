@@ -28,7 +28,6 @@ module.exports = function (Manager) {
                       action: 'GenerateExecutionProcess', target: fleetManager,
                       args: {
                         mission: mission, finalAction: 'RTL',
-                        numLaps: 1, initMp: 1,
                         devicesId: req.body.devices
                       }
                   };
@@ -55,6 +54,34 @@ module.exports = function (Manager) {
           res.status(400).json({ success: false, error: 'ERR_BADPARAMS' });
       }
   });
+
+  router.post('/stop', (req, res, next) => {
+    let keys = Object.keys(req.body);
+    if( keys.indexOf('missionId') > -1 ) {
+        try {
+          let erMsg = {
+            action: 'CancelExecution', target: fleetManager,
+            args: {
+              missionId: req.body.missionId
+            }
+          };
+          Manager.sendMessage(fleetManager, 'messageSyncServer', erMsg)
+          .then(execRes => {
+              if(execRes.error == 'ERR_NOERROR')
+                  res.status(200).json({ success: true, data: { result: execRes } });
+              else
+                  res.status(200).json({ success: false, error: execRes.error });
+              })
+          .catch(err => {
+              res.status(200).json({ success: false, error: (err.error || err) });
+          });
+        } catch (error) {
+            res.status(200).json({ success: false, error: error.message || error });
+        }
+    } else {
+        res.status(400).json({ success: false, error: 'ERR_BADPARAMS' });
+    }
+});
 
 
     let missions = [

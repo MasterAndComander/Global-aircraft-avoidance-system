@@ -128,7 +128,7 @@ function addBaldoMission(mission, i) {
   abort.className = 'btn azulSave marginRight7px fa fa-times';
   abort.id = 'abort' + mission.id;
   abort.title = 'Abort mission';
-  abort.onclick = () => abortMissionFromBaldo(mission.id);
+  abort.onclick = () => abortMission(mission.id);
 
   divBut.appendChild(play);
   divBut.appendChild(abort);
@@ -179,158 +179,24 @@ function findMissionById(id) {
   document.getElementById('missionId' + id).setAttribute('abierta', true);
 }
 
-function pauseMissionFromMission(missionId, event) {
-  event.stopPropagation();
-  try {
-    let dev2Send = devices.filter(device => {
-      if (device.automatic) {
-        return (device.automatic.mId == missionId && !device.automatic.paused);
-      }
-    });
-    if (dev2Send.length > 0) {
-      let theMission = findInMissionsArray(missionId);
-      let mName = theMission ? theMission.name : "";
-      let devicesMission = dev2Send.map(elem => elem.id);
-      let data = { arrayIds: devicesMission, missionId: missionId };
-      sendPause(data)
-      .then(pause => {
-        pause.responses.forEach((response, i) => {
-          let device = devices.find(elem => elem.id == response.deviceId);
-          if(device) {
-            if (response.error.error == "ERR_NOERROR") {
-              $.notify({ message: `${device.name} has pause ${mName}` }, { type: 'success' });
-            } else {
-              $.notify({ message: `${device.name} has't been able to pause ${mName}` }, { type: 'warning' });
-            }
-          }
-        });
-      })
-      .catch(e => {
-        throw `Pause from mission - `+(e.message || e);
-      });
-    } else {
-      throw "No devices to pause this mission";
-    }
-  } catch (e) {
-    $.notify({ message: `Pause from mission - `+(e.message || e) }, { type: 'danger' });
-  }
-}
-
-function continueMissionFromMission(missionId, event) {
-  event.stopPropagation();
-  try {
-    let dev2Send = devices.filter(device => {
-      if (device.automatic) {
-        return (device.automatic.mId == missionId && device.automatic.paused);
-      }
-    });
-    if (dev2Send.length > 0) {
-      let theMission = findInMissionsArray(missionId);
-      let mName = theMission ? theMission.name : "";
-      let devicesMission = dev2Send.map(elem => elem.id);
-      let data = { arrayIds: devicesMission, missionId: missionId };
-      sendContinue(data)
-      .then(cont => {
-        cont.responses.forEach((response, i) => {
-          let device = devices.find(elem => elem.id == response.deviceId);
-          if(device) {
-            if (response.error.error == "ERR_NOERROR") {
-              $.notify({ message: `${device.name} has continue ${mName}` }, { type: 'success' });
-            } else {
-              $.notify({ message: `${device.name} has't been able to continue ${mName}` }, { type: 'warning' });
-            }
-          }
-        });
-      })
-      .catch(e => {
-        throw `Pause from mission - `+(e.message || e);
-      });
-    } else {
-      throw "No devices to pause this mission";
-    }
-  } catch (e) {
-    $.notify({ message: `Continue from mission - `+(e.message || e) }, { type: 'danger' });
-  }
-}
-
-function abortMissionFromBaldo(missionId) {
-  let devExec = devices.some(device => {
-    if (device.automatic) {
-      return (device.automatic.mId == missionId);
-    }
-  });
-  if (devExec) {
-    document.getElementById('idDeviceGeneralAbort').value = missionId;
-    let myModal = new bootstrap.Modal('#chooseGeneralAbort', {});
-    myModal.show();
-  } else {
-    $.notify({ message: 'There are no devices executing this mission' }, { type: 'warning' });
-  }
-}
-
-function abortMissionFromMission(missionId) {
-  let abortType = document.getElementById('generalAbortSelect').value;
-  let theMission = findInMissionsArray(missionId);
-  let mName = theMission ? theMission.name : "";
-  let devExec = devices.filter(device => {
-    if (device.automatic) {
-      return (device.automatic.mId == missionId);
-    }
-  });
-  if (devExec.length > 0) {
-    let devicesMission = devExec.map(elem => elem.id);
-    let data = { arrayIds: devicesMission, missionId: missionId, abortType: abortType };
-    sendAbort(data)
-    .then(abort => {
-      abort.responses.forEach((response, i) => {
-        let device = devices.find(elem => elem.id == response.deviceId);
-        if(device) {
-          if (response.error.error == "ERR_NOERROR") {
-            $.notify({ message: `${device.name} has abort ${mName}` }, { type: 'success' });
-          } else {
-            $.notify({ message: `${device.name} has't been able to abort ${mName}` }, { type: 'warning' });
-          }
+function abortMission(missionId) {
+  let data = { missionId: missionId };
+  sendAbort(data)
+  .then(abort => {
+    abort.responses.forEach((response, i) => {
+      let device = devices.find(elem => elem.id == response.deviceId);
+      if(device) {
+        if (response.error == "ERR_NOERROR") {
+          $.notify({ message: `${device.name} has abort ${mName}` }, { type: 'success' });
+        } else {
+          $.notify({ message: `${device.name} has't been able to abort ${mName}` }, { type: 'warning' });
         }
-      });
-      $('#chooseGeneralAbort').modal('hide');
-    })
-    .catch(e => {
-      $.notify({ message: `Abort from mission - `+(e.message || e) }, { type: 'danger' });
+      }
     });
-  } else {
-    $.notify({ message: `Device not found` }, { type: 'warning' });
-  }
-}
-
-//Función que aborta la misión desde el botón en la baldosa del dispositivo
-function abortMission(deviceId, abortType) {
-  let device = devices.find(elem => elem.id == deviceId)
-  if(device) {
-    if(device.automatic && device.automatic.mId) {
-      let data = {arrayIds: [deviceId], missionId: device.automatic.mId, abortType: abortType };
-      let theMission = findInMissionsArray(device.automatic.mId);
-      let mName = theMission ? theMission.name : "";
-      sendAbort(data)
-      .then(abort => {
-        abort.responses.forEach((response, i) => {
-          abort.responses.forEach((response, i) => {
-            let device = devices.find(elem => elem.id == response.deviceId);
-            if(device) {
-              if (response.error.error == "ERR_NOERROR") {
-                $.notify({ message: `${device.name} has abort ${mName}` }, { type: 'success' });
-              } else {
-                $.notify({ message: `${device.name} has't been able to abort ${mName}` }, { type: 'warning' });
-              }
-            }
-          });
-        });
-      }).catch(e => {
-        $.notify({ message: `Abort from ${device.name} - `+(e.message || e) }, { type: 'danger' });
-      });
-    } else {
-      $.notify({ message: `Abort from ${device.name} - No current mission` }, { type: 'warning' });
-    }
-  }
+  })
+  .catch(e => {
+    $.notify({ message: `Abort from mission - `+(e.message || e) }, { type: 'danger' });
+  });
 }
 
 function chargePlayDeviceList(mission) {
@@ -382,7 +248,7 @@ function cleanOldMissionExec(mId) {
 
 function sendAbort(data) {
   return new Promise((resolve, reject) => {
-    ajaxPost('device/automaticAbort', data)
+    ajaxPost('stop', data)
     .then(salida => {
       resolve(salida.result);
     })

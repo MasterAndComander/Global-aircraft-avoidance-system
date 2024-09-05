@@ -22,7 +22,8 @@ telemetry = {
     'mode': 'LANDED',
     'gps': {},
     'euler': {},
-    'v': {}
+    'v': {},
+    'auto': {}
 }
 
 
@@ -243,6 +244,14 @@ class Vehicle:
             daemon=True
         ).start()
 
+    def do_automatic_abort(self):
+        '''
+        Vehicle abort an automatic mission
+        '''
+        self.do_rtl()
+        self.doing_automatic_mission = False
+        telemetry['auto'] = {}
+
     def do_automatic_mission(self, mission):
         '''
         Vehicle executes an automatic mission
@@ -259,6 +268,7 @@ class Vehicle:
 
         # start new mission
         self.doing_automatic_mission = True
+        telemetry['auto']['id'] = mission['args']['mission_id']
 
         # check if mission is not empty
         if mission:
@@ -305,6 +315,7 @@ class Vehicle:
 
         while self.doing_automatic_mission and mission_item < final_waypoint:
             print(f'  Tavel to waypoint {mission_item}')
+            telemetry['auto']['current_wp'] = mission_item
 
             self.vehicle.wait_for_mode('GUIDED')
 
@@ -344,6 +355,7 @@ class Vehicle:
                 self.do_rtl()
 
         self.doing_automatic_mission = False
+        telemetry['auto'] = {}
 
     def check_waypoint_reached(self, target_location):
         '''
@@ -421,6 +433,8 @@ def message_callback(ch, method, properties, body):
                 vehicle.do_stop()
             elif command['action'] == 'automatic-mission':
                 vehicle.do_automatic_mission(command)
+            elif command['action'] == 'automatic-abort':
+                vehicle.do_automatic_abort()
             elif command['action'] == 'land':
                 vehicle.do_land()
         else:

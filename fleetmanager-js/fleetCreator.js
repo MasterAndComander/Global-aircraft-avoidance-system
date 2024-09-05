@@ -119,10 +119,23 @@ class FleetManager {
                                 if(
                                     (data.args.mission && (typeof data.args.mission === 'object')) &&
                                     (data.args.finalAction && (typeof data.args.finalAction === 'string')) &&
-                                    (!isNaN(parseInt(data.args.numLaps))) && (!isNaN(parseInt(data.args.initMp))) &&
                                     (data.args.devicesId && (Array.isArray(data.args.devicesId)))
                                 ) {
-                                    self.createExecProcess(data.args.mission, data.args.devicesId, data.args.numLaps)
+                                    self.createExecProcess(data.args.mission, data.args.devicesId)
+                                    .then(struct => {
+                                        resolve({error: 'ERR_NOERROR', responses: struct});
+                                    })
+                                    .catch(err => reject({error: err.message || err}));
+                                } else {
+                                    self.logger.log('error', 'syncDataReceived::GenerateExecutionProcess::ERR_BADPARAMS');
+                                    resolve({error: 'ERR_BADPARAMS'});
+                                }
+                                break;
+                            case 'CancelExecution':
+                                if(
+                                    (data.args.missionId && (!isNaN(parseInt(data.args.missionId))))
+                                ) {
+                                    self.sendAbort(data.args.missionId)
                                     .then(struct => {
                                         resolve({error: 'ERR_NOERROR', responses: struct});
                                     })
@@ -231,6 +244,7 @@ class FleetManager {
             item.radius = self.calculateRadiusBySpeed(item.speed);
             item.bearing = self.calculateBearing(data.v);
             item.lastUpdate = new Date().getTime();
+            item.auto = data.auto;
             item.online = true;
             item.mode = data.mode;
             item.gpsData = data.gps;
@@ -248,6 +262,7 @@ class FleetManager {
                 lastEvasion: {deviceId: null, timer: new Date().getTime()},
                 nextPos: self.calculateNextPosition(data),
                 onGround: data.mode == "LANDED",
+                auto: data.auto,
                 onEvasion: false, radius: self.calculateRadiusBySpeed(data.v.speed || 0),
                 bearing: self.calculateBearing(data.v),
                 speed: data.v.speed || 0
@@ -616,7 +631,40 @@ class FleetManager {
         return EARTH_R * c; // Distance in m
     }
 
-    createExecProcess(mission, devicesId, numLaps) {
+    sendAbort(missionId) {
+        const self = this;
+        return new Promise( (resolve, reject) => {
+            try {
+                let arrayResponses = [];
+                self.asyncLoopMenor(0, self.arrayMap.length, (loop) => {
+                    let device = self.arrayMap[loop.iteration()];
+                    if(device && device.auto && device.auto.id == missionId) {
+                        let msgBody = {
+                            message: 'automatic-abort'
+                        };
+                        let packet = self.createServerPacket(device.device, device.device, 'automatic-abort', msgBody);
+                        self.sendRemoteRabbit(packet, 'command')
+                        .then(resStart => {
+                            arrayResponses.push({droneId: device.device, error: 'ERR_NOERROR'});
+                            loop.next();
+                        })
+                        .catch(err => {
+                            arrayResponses.push({droneId: device.device, error: err.message || err});
+                            loop.next();
+                        });
+                    } else {
+                        loop.next();
+                    }
+                }, (err) => {
+                    resolve(arrayResponses);
+                });
+              } catch (e) {
+                reject(e.message);
+              }
+        });
+    }
+
+    createExecProcess(mission, devicesId) {
         const self = this;
         return new Promise( (resolve, reject) => {
           try {
@@ -629,7 +677,6 @@ class FleetManager {
                         message: 'automatic-mission',
                         mission_id: mission.id,
                         mission: missionPoints,
-                        num_laps: parseInt(numLaps),
                         init_waypoint: 0,
                         current_waypoint: 0,
                         user: 'ALBERTO',
@@ -637,7 +684,6 @@ class FleetManager {
                         approach_altitude: 0
                     };
                     let packet = self.createServerPacket(devicesId[i], devicesId[i], 'automatic-mission', msgBody);
-                    console.log(JSON.stringify(packet))
                     self.sendRemoteRabbit(packet, 'command')
                     .then(resStart => {
                         arrayResponses.push({droneId: devicesId[i], error: 'ERR_NOERROR'});
