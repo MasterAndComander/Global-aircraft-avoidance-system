@@ -671,30 +671,37 @@ class FleetManager {
             let arrayResponses = [];
             self.translateMps(mission.structPoints)
             .then(missionPoints => {
-                self.asyncLoopMenor(0, devicesId.length, (loop) => {
-                    let i = loop.iteration();
-                    let msgBody = {
-                        message: 'automatic-mission',
-                        mission_id: mission.id,
-                        mission: missionPoints,
-                        init_waypoint: 0,
-                        current_waypoint: 0,
-                        user: 'ALBERTO',
-                        final_waypoint: missionPoints.length,
-                        approach_altitude: 0
-                    };
-                    let packet = self.createServerPacket(devicesId[i], devicesId[i], 'automatic-mission', msgBody);
-                    self.sendRemoteRabbit(packet, 'command')
-                    .then(resStart => {
-                        arrayResponses.push({droneId: devicesId[i], error: 'ERR_NOERROR'});
-                        loop.next();
-                    })
-                    .catch(err => {
-                        arrayResponses.push({droneId: devicesId[i], error: err.message || err});
-                        loop.next();
+                self.splitMission(mission.structPoints, devicesId)
+                .then(division => {
+                    self.asyncLoopMenor(0, devicesId.length, (loop) => {
+                        let i = loop.iteration();
+                        let msgBody = {
+                            message: 'automatic-mission',
+                            mission_id: mission.id,
+                            mission: missionPoints,
+                            init_waypoint: division[i].init,
+                            current_waypoint: 0,
+                            user: 'ALBERTO',
+                            final_waypoint: division[i].end,
+                            approach_altitude: 0
+                        };
+                        let packet = self.createServerPacket(devicesId[i], devicesId[i], 'automatic-mission', msgBody);
+                        self.sendRemoteRabbit(packet, 'command')
+                        .then(resStart => {
+                            arrayResponses.push({droneId: devicesId[i], error: 'ERR_NOERROR'});
+                            loop.next();
+                        })
+                        .catch(err => {
+                            arrayResponses.push({droneId: devicesId[i], error: err.message || err});
+                            loop.next();
+                        });
+                    }, (err) => {
+                        resolve(arrayResponses);
                     });
-                }, (err) => {
-                    resolve(arrayResponses);
+                })
+                .catch(err => {
+                    self.logger.log('error', 'createExecProcess::splitMission::'+JSON.stringify(err.message || err));
+                    reject(err);
                 });
             })
             .catch(err => {
@@ -742,6 +749,39 @@ class FleetManager {
             }
         });
     }
+
+    splitMission(points, devices) {
+        const self = this;
+        return new Promise( (resolve, reject) => {
+            try {
+                let division = [];
+                if(devices.length == 1) {
+                    division.push({init: 0, end: points.length});
+                    resolve(division);
+                } else if(points.length <= devices.length) {
+                    devices.forEach((elem, i) => {
+                        division.push({init: i, end: i+1});
+                    });
+                    resolve(division);
+                } else {
+                    let cuenta = 0;
+                    let div = Math.trunc(points.length/devices.length);
+                    let mod = points.length%devices.length;
+                    devices.forEach((elem, i) => {
+                        if(i == devices.length - 1) {
+                            division.push({init: cuenta, end: cuenta + div + mod});
+                        } else {
+                            division.push({init: cuenta, end: cuenta + div});
+                            cuenta = cuenta + div;
+                        }
+                    });
+                    resolve(division);
+                }
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }    
 
     /******************************************************************************/
     /* LOOPS ASINCRONOS                                                           */
