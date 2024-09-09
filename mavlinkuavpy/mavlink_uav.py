@@ -23,7 +23,8 @@ telemetry = {
     'gps': {},
     'euler': {},
     'v': {},
-    'auto': {}
+    'auto': {},
+    'onEvasion': False
 }
 
 
@@ -46,6 +47,10 @@ class Vehicle:
         self.vehicle = None
         # Check if vehicle is doing an automatic mission
         self.doing_automatic_mission = False
+        # Save the current mission
+        self.currentMission = {}
+        # Copy to use in evasion
+        self.copyM = {}
 
         # Show where vehicle is connecting to
         print(f'Connecting to vehicle on: {self.connection_string}')
@@ -212,6 +217,34 @@ class Vehicle:
             daemon=True
         ).start()
 
+    def do_evasion(self, target_location):
+        '''
+        Vehicle perform an evasion
+        '''
+        telemetry['onEvasion'] = True
+        self.copyM = self.currentMission
+        self.copyM["args"]["init_waypoint"] = telemetry['auto']['current_wp']
+        self.vehicle.wait_for_mode('GUIDED')
+
+        target = LocationGlobalRelative(
+            target_location['latitude'],
+            target_location['longitude'],
+            target_location['altitude']
+        )
+        self.vehicle.simple_goto(target)
+
+        Thread(
+            target=self.check_waypoint_reached,
+            args=(target,),
+            daemon=True
+        ).start()
+        while telemetry['onEvasion']:
+            time.sleep(1)
+        if len(self.copyM):
+            self.do_automatic_mission(self.copyM)
+            
+
+
     def do_stop(self):
         '''
         Vehicle stops its movement and any other action
@@ -268,6 +301,7 @@ class Vehicle:
 
         # start new mission
         self.doing_automatic_mission = True
+        self.currentMission = mission
         telemetry['auto']['id'] = mission['args']['mission_id']
 
         # check if mission is not empty
@@ -334,6 +368,7 @@ class Vehicle:
                     ):
                     print('  Target not reached')
                     self.doing_automatic_mission = False
+                    self.currentMission = {}
                     self.do_stop()
             elif mission_array[mission_item]['type'] == 'command':
                 print('  Perform command')
@@ -355,6 +390,7 @@ class Vehicle:
                 self.do_rtl()
 
         self.doing_automatic_mission = False
+        self.currentMission = {}
         telemetry['auto'] = {}
 
     def check_waypoint_reached(self, target_location):
@@ -386,12 +422,14 @@ class Vehicle:
         # When approach is done, change to mode LOITER
         if approaching is False:
             print('Target reached')
+            telemetry['onEvasion'] = False
             self.vehicle.wait_for_mode('LOITER')
             return True
 
         # When target is not reached but a mode change occurs
         print('Target not reached')
         approaching = False
+        telemetry['onEvasion'] = False
         # self.vehicle.wait_for_mode('LOITER')
         return False
 
@@ -437,6 +475,8 @@ def message_callback(ch, method, properties, body):
                 vehicle.do_automatic_abort()
             elif command['action'] == 'land':
                 vehicle.do_land()
+            elif command['action'] == 'evasion':
+                vehicle.do_evasion(command['args'])
         else:
             print('not myself')
     except json.decoder.JSONDecodeError:

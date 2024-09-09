@@ -345,12 +345,8 @@ class FleetManager {
                                 (evasor.lastEvasion.deviceId == item.device && (new Date().getTime() - evasor.lastEvasion.timer > 3000))
                                 ) {
                                 //Mandamos mensaje al Device
-                                let packet = {
-                                    Target: evasor.device,
-                                    Source: self.mySelf,
-                                    Body: intersecta
-                                };
-                                self.rabbit.publishMessage(evasor.device, 'messageServer', packet)
+                                let packet = self.createServerPacket(evasor.device, evasor.device, 'evasion', intersecta);
+                                self.sendRemoteRabbit(packet, 'command')
                                 .then(result => {
                                     self.logger.log('info', evasor.device+'::checkCrossTrajectorys::EvasionInit::'+JSON.stringify(result));
                                     evasor.lastEvasion.deviceId = item.device;
