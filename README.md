@@ -35,6 +35,16 @@ docker compose up -d --build
 docker compose logs -f
 ```
 
+## Create missions
+Missions are based on [GeoJSON format](https://geojson.org/) 
+To add missions, it is recommended to use the website [geojson.io](https://geojson.io/)
+The accepted missions are those that form a line or a polygon. And the GeoJSON obtained must be included in the .env file as a MISSION_LIST variable, which must be an array in string format. Currently there is an example that can be used as a reference.
+The 'properties' field of GeoJSON can include variables to make the creation of missions more useful. The variables are:
+
+* name: The name we want to give to the mission.
+
+* altitude: The altitude value that all the waypoints of the mission will have. (It must be greater than 10). If it is not included, the value will be 20.
+
 ## testing
 
 To test, open a browser and enter localhost:3000 to access the web interface.

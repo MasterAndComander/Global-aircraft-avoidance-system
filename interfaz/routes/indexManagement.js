@@ -1,9 +1,8 @@
-module.exports = function (Manager) {
+module.exports = function (Manager, missions) {
 
     const express = require('express');
     const router = express.Router();
     const fleetManager = process.env.FLEET_EXCHANGE;
-    const missions = JSON.parse(process.env.MISSION_LIST.replace(/&quot;/g, '\"'))
   
     router.get('/', (req, res, next) => {
         res.redirect('/mapView');
