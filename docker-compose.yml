@@ -62,8 +62,8 @@ services:
       - .env
     environment:
       DEVICE_ID: titan
-      LAT: 36.74700544809835
-      LON: -4.55431044306826
+      LAT: 36.73635215795612
+      LON: -4.735480570940837
     restart: always
     networks:
       - rabbitmq-net
@@ -80,8 +80,26 @@ services:
       - .env
     environment:
       DEVICE_ID: nostromo
-      LAT: 36.74742848121214
-      LON: -4.554061249715687
+      LAT: 36.7361443663702
+      LON: -4.735151560244702
+    restart: always
+    networks:
+      - rabbitmq-net
+  
+  gaas-nebuchadnezzar:
+    build:
+      context: .
+      dockerfile: mavlinkuavpy/Dockerfile
+      ssh:
+        - default
+    container_name: gaas-nebuchadnezzar
+    image: vehicle
+    env_file:
+      - .env
+    environment:
+      DEVICE_ID: nebuchadnezzar
+      LAT: 36.735884189557225
+      LON: -4.734648239245928
     restart: always
     networks:
       - rabbitmq-net
