@@ -77,6 +77,11 @@ function printDevices(arrayD) {
                         mode: '', yaw: 0, battery: 0, heading: 0, lastUpdate: null, connect: false, selected: false,
                         speed: 0, name: element, 
                         counterLostConnection: null,
+                        circleMarker: L.marker(myCenter, {
+                          rotationAngle: 0,
+                          icon: deviceImage.imgCircleGif,
+                          optimized: false
+                        }),
                         marker: L.marker(myCenter, {
                             rotationAngle: 0,
                             icon: deviceImage.landed,

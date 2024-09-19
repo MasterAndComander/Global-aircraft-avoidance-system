@@ -3,11 +3,15 @@
 let deviceImage = {
     flying: 'images/devices/deviceFly.png',
     landed: 'images/devices/deviceLanded.png',
-    disconnect: 'images/devices/deviceDisconnect.png'
+    disconnect: 'images/devices/deviceDisconnect.png',
+    imgCircleGif: 'images/devices/circleWhite.gif'
 };
 
 jQuery.each(deviceImage, function(i, val) {
-  deviceImage[i] = parseDeviceIcon(val, 50, 50);
+  if(i == 'imgCircleGif') {
+    deviceImage[i] = parseDeviceIcon(val, 100, 100);
+  } else 
+    deviceImage[i] = parseDeviceIcon(val, 50, 50);
 });
 
 function checkAutoMission(oldAuto, currentAuto) {
@@ -59,9 +63,10 @@ function uavTelemetry(id, info) {
           device.submode = info.mode;
           device.currentTask = info.currentTask;
           device.laser = info.gps.altitude;
-          device.landed = info.landed;
+          device.landed = device.mode == 'LANDED';
           device.heading = info.heading;
           device.battery = info.battery;
+          device.onEvasion = info.onEvasion;
           device.speed = info.v.speed || 0;
           device.eulerData = info.euler;
           device.lastUpdate = new Date().getTime();
@@ -73,6 +78,7 @@ function uavTelemetry(id, info) {
               configurationUavOnline(device);
               let newPointUav= L.latLng(device.position.latitude, device.position.longitude);
               device.marker.setLatLng(newPointUav);
+              device.circleMarker.setLatLng(newPointUav);
               device.marker.setZIndexOffset(105);
               device.marker.options.labelContent.setLatLng(newPointUav);
               let imgMarkerActive;
@@ -82,6 +88,13 @@ function uavTelemetry(id, info) {
               } else {
                 imgMarkerActive = deviceImage.flying;
                 device.marker.setIcon(deviceImage.flying);
+              }
+              if(device.onEvasion) {
+                if(!map.hasLayer(device.circleMarker)) {
+                  device.circleMarker.addTo(map);
+                }
+              } else {
+                map.removeLayer(device.circleMarker);
               }
               let missionStr = parseAutoMission(device.automatic);
               device.marker.setRotationAngle(device.heading);
@@ -112,6 +125,7 @@ function uavTelemetry(id, info) {
           });
         } else {
           device.online = false;
+          map.removeLayer(device.circleMarker);
           if(device.connect) {
             device.marker.setIcon(deviceImage.disconnect);
             desactiveMissionControl(device.id);
