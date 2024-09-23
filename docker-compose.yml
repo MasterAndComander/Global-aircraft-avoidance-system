@@ -10,6 +10,11 @@ services:
     volumes:
       - ./rabbitmq/conf/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
       - rabbitmq:/var/lib/rabbitmq/
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
     ports:
       - 5672:5672
       - 15672:15672
@@ -21,12 +26,13 @@ services:
       build:
         context: .
         dockerfile: fleetmanager-js/Dockerfile
-        ssh:
-        - default
       container_name: gaas-fleet-manager
       env_file:
       - .env
       restart: always
+      depends_on:
+        rabbitmq:
+          condition: service_healthy
       volumes:
         - ~/log/fleet-manager:/root/log
       networks:
@@ -37,12 +43,13 @@ services:
       build:
         context: .
         dockerfile: interfaz/Dockerfile
-        ssh:
-        - default
       container_name: gaas-ui
       env_file:
       - .env
       restart: always
+      depends_on:
+        rabbitmq:
+          condition: service_healthy
       ports:
         - 3000:3000
       volumes:
@@ -54,8 +61,6 @@ services:
     build:
       context: .
       dockerfile: mavlinkuavpy/Dockerfile
-      ssh:
-        - default
     container_name: gaas-titan
     image: vehicle
     env_file:
@@ -65,6 +70,9 @@ services:
       LAT: 36.73635215795612
       LON: -4.735480570940837
     restart: always
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     networks:
       - rabbitmq-net
 
@@ -72,8 +80,6 @@ services:
     build:
       context: .
       dockerfile: mavlinkuavpy/Dockerfile
-      ssh:
-        - default
     container_name: gaas-nostromo
     image: vehicle
     env_file:
@@ -83,6 +89,9 @@ services:
       LAT: 36.7361443663702
       LON: -4.735151560244702
     restart: always
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     networks:
       - rabbitmq-net
   
@@ -90,8 +99,6 @@ services:
     build:
       context: .
       dockerfile: mavlinkuavpy/Dockerfile
-      ssh:
-        - default
     container_name: gaas-nebuchadnezzar
     image: vehicle
     env_file:
@@ -101,6 +108,9 @@ services:
       LAT: 36.735884189557225
       LON: -4.734648239245928
     restart: always
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     networks:
       - rabbitmq-net
 

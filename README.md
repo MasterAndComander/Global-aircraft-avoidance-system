@@ -51,7 +51,7 @@ su - ${USER}
 
 # Use the following command to download
 mkdir -p ~/.docker/cli-plugins/
-curl -SL https://github.com/docker/compose/releases/download/v2.3.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
+curl -SL https://github.com/docker/compose/releases/download/v2.29.6/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
 # Next, set the correct permissions so that the docker compose command is executable
 chmod +x ~/.docker/cli-plugins/docker-compose
 # To verify that the installation was successful, you can run
@@ -62,18 +62,30 @@ docker compose version
 
 ```bash
 # clone project
-git clone <change-me>
+git clone https://github.com/MasterAndComander/Global-aircraft-avoidance-system.git
 cd Global-aircraft-avoidance-system
 
 # edit .env and docker-compose.yml to fit your needs
 cat .env
 cat docker-compose.yml
 
-# launch compose
+```
+
+## Execution
+
+```bash
+# Launch compose
 docker compose up -d --build
 
 # Log control
 docker compose logs -f
+```
+
+## Ending
+
+```bash
+# Down compose
+docker compose down
 ```
 
 ## Create missions
